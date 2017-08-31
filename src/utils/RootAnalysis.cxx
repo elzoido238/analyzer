@@ -35,65 +35,65 @@
 namespace dutils = dragon::utils;
 
 namespace {
-//
-// Alias for surface barrier max channels
-const Int_t NSB = dragon::SurfaceBarrier::MAX_CHANNELS;
+	//
+	// Alias for surface barrier max channels
+	const Int_t NSB = dragon::SurfaceBarrier::MAX_CHANNELS;
 
-//
-// Get a branch from a tree and print an error message if input is bad
-template <typename T>
-TBranch* get_branch(TTree* t, T& valref, const char* name, const char* funcname = "") {
-	TBranch* branch;
-	Int_t code = t->SetBranchAddress(name, &valref, &branch);
-	if(code < 0) {
-		dutils::Error(funcname, __FILE__, __LINE__)
-			<< "Couldn't set Branch \"" << name << "\" in TTree \"" << t->GetName() << "\"";
-		return 0;
+	//
+	// Get a branch from a tree and print an error message if input is bad
+	template <typename T>
+	TBranch* get_branch(TTree* t, T& valref, const char* name, const char* funcname = "") {
+		TBranch* branch;
+		Int_t code = t->SetBranchAddress(name, &valref, &branch);
+		if(code < 0) {
+			dutils::Error(funcname, __FILE__, __LINE__)
+				<< "Couldn't set Branch \"" << name << "\" in TTree \"" << t->GetName() << "\"";
+			return 0;
+		}
+		return branch;
 	}
-	return branch;
-}
 
-//
-// RAII class to change the MakeClass() option of a tree and reset it when done
-class SetMakeClass_t {
-	TTree* fTree;
-	Int_t fMakeClass;
-public:
-	SetMakeClass_t(TTree* tree, Int_t make): fTree(tree)
+	//
+	// RAII class to change the MakeClass() option of a tree and reset it when done
+	class SetMakeClass_t {
+		TTree* fTree;
+		Int_t fMakeClass;
+	public:
+		SetMakeClass_t(TTree* tree, Int_t make): fTree(tree)
 		{
 			if(fTree) {
 				fMakeClass = fTree->GetMakeClass();
 				fTree->SetMakeClass(make);
 			}
 		}
-	~SetMakeClass_t() { if(fTree) fTree->SetMakeClass(fMakeClass); }
-};
+		~SetMakeClass_t() { if(fTree) fTree->SetMakeClass(fMakeClass); }
+	};
 
-//
-// Class to automatially reset TTree branch addresses
-class AutoResetBranchAddresses {
-	TObjArray fTrees;
-public:
-	AutoResetBranchAddresses(TTree* t) { fTrees.Add(t); }
-	AutoResetBranchAddresses(TTree** tarr, Int_t n) {
-		for(Int_t i=0; i< n; ++i) fTrees.Add(tarr[i]);
-	}
-	~AutoResetBranchAddresses() {
-		for(Int_t i=0; i< fTrees.GetEntries(); ++i) {
-			TTree* tree = static_cast<TTree*>(fTrees.At(i));
-			if(tree) tree->ResetBranchAddresses();
+	//
+	// Class to automatially reset TTree branch addresses
+	class AutoResetBranchAddresses {
+		TObjArray fTrees;
+	public:
+		AutoResetBranchAddresses(TTree* t) { fTrees.Add(t); }
+		AutoResetBranchAddresses(TTree** tarr, Int_t n) {
+			for(Int_t i=0; i< n; ++i) fTrees.Add(tarr[i]);
 		}
-	}
-};
+		~AutoResetBranchAddresses() {
+			for(Int_t i=0; i< fTrees.GetEntries(); ++i) {
+				TTree* tree = static_cast<TTree*>(fTrees.At(i));
+				if(tree) tree->ResetBranchAddresses();
+			}
+		}
+	};
 
-//
-// Delete a pointer and reset to NULL
-template <class T> void Zap(T*& t)
-{
-	if(!t) return;
-	delete t;
-	t = 0;
-}
+	//
+	// Delete a pointer and reset to NULL
+	template <class T> void Zap(T*& t)
+	{
+		if(!t) return;
+		delete t;
+		t = 0;
+	}
 
 } // namespace
 
@@ -210,7 +210,7 @@ void dragon::MakeChains(const std::vector<Int_t>& runnumbers, const char* format
 }
 
 void dragon::FriendChain(TChain* chain, const char* friend_name, const char* friend_alias,
-												 const char* format, const char* friend_format)
+						 const char* format, const char* friend_format)
 {
 	///
 	/// \param chain Initial chain, the one to which we are adding friends.
@@ -384,36 +384,36 @@ const char* dragon::TTreeFilter::GetFilterCondition(TTree* tree) const
 }
 
 namespace {
-struct ThreadArgs_t {
-	TTree*  fIn;  // input TTree
-	TTree** fOut; // output TTree
-	TDirectory* fOutDir;    // output directory
-	const char* fCondition; // filter condition
-};
+	struct ThreadArgs_t {
+		TTree*  fIn;  // input TTree
+		TTree** fOut; // output TTree
+		TDirectory* fOutDir;    // output directory
+		const char* fCondition; // filter condition
+	};
 
-void * run_thread(void* input)
-{
-	//
-	// NOTE: input must point to a valid ThreadArgs_t struct
-	Long64_t *nfiltered = new Long64_t(0);
-	TDirectory* current = 0;
-	ThreadArgs_t* args = (ThreadArgs_t*)input;
+	void * run_thread(void* input)
 	{
-		TThread::Lock();
-		current = gDirectory;
-		args->fOutDir->cd();
-		TThread::UnLock();
-	}
-	*(args->fOut) = args->fIn->CopyTree(args->fCondition);
-	(*(args->fOut))->AutoSave();
-	*nfiltered = (*(args->fOut))->GetEntries();
-	{
-		TThread::Lock();
-		current->cd();
-		TThread::UnLock();
-	}
-	return (void*)nfiltered;
-} }
+		//
+		// NOTE: input must point to a valid ThreadArgs_t struct
+		Long64_t *nfiltered = new Long64_t(0);
+		TDirectory* current = 0;
+		ThreadArgs_t* args = (ThreadArgs_t*)input;
+		{
+			TThread::Lock();
+			current = gDirectory;
+			args->fOutDir->cd();
+			TThread::UnLock();
+		}
+		*(args->fOut) = args->fIn->CopyTree(args->fCondition);
+		(*(args->fOut))->AutoSave();
+		*nfiltered = (*(args->fOut))->GetEntries();
+		{
+			TThread::Lock();
+			current->cd();
+			TThread::UnLock();
+		}
+		return (void*)nfiltered;
+	} }
 
 Int_t dragon::TTreeFilter::Run()
 {
@@ -456,8 +456,8 @@ Int_t dragon::TTreeFilter::Run()
 		<< "\t<tree name>, <num events>, <filter condition>\n";
 	for(size_t i=0; i< threads.size(); ++i)
 		std::cout << "\t" << threads[i].second->fIn->GetName()    << ", "
-							<<         threads[i].second->fIn->GetEntries() << ", \""
-							<<         threads[i].second->fCondition << "\"\n";
+				  <<         threads[i].second->fIn->GetEntries() << ", \""
+				  <<         threads[i].second->fCondition << "\"\n";
 	std::cout << "\nIf there are many events, this may take a while...\n\n";
 
 	//
@@ -479,7 +479,7 @@ Int_t dragon::TTreeFilter::Run()
 	//
 	// Message & cleanup
 	std::cout << "Done!\nNumber of events written:\n"
-						<< "\t<tree name>, <num events>\n";
+			  << "\t<tree name>, <num events>\n";
 	for(size_t i=0; i< threads.size(); ++i) {
 		Long64_t* nout64 = (Long64_t*) nout[i];
 		Long64_t nnn = nout64 ? *nout64 : 0;
@@ -691,7 +691,7 @@ TTree* dragon::RossumData::GetTree(Int_t runnum, const char* time) const
 }
 
 UDouble_t dragon::RossumData::AverageCurrent(Int_t run, Int_t cup, Int_t iteration,
-																						 Double_t skipBegin, Double_t skipEnd)
+											 Double_t skipBegin, Double_t skipEnd)
 {
 	///
 	/// \param run Run number from which to get cup readings; this will look at the
@@ -830,7 +830,7 @@ void dragon::BeamNorm::ChangeRossumFile(const char* name)
 }
 
 Int_t dragon::BeamNorm::ReadSbCounts(TFile* datafile, Double_t pkLow0, Double_t pkHigh0,
-																		 Double_t pkLow1, Double_t pkHigh1,Double_t time)
+									 Double_t pkLow1, Double_t pkHigh1,Double_t time)
 {
 	///
 	/// Calculates the "R-value" to normalize SB readings to Faraday cup data.
@@ -1231,21 +1231,21 @@ TGraphErrors* dragon::BeamNorm::PlotNbeam(double sbnorm, int which, Marker_t mar
 }
 
 namespace {
-void null_rundata(dragon::BeamNorm::RunData* rundata) {
-	if(!rundata) return;
-	rundata->nrecoil  = UDouble_t(0,0);
-	for(int i=0; i< NSB; ++i) {
-		rundata->yield[i] = UDouble_t(0,0);
-		rundata->nbeam[i] = UDouble_t(0,0);
+	void null_rundata(dragon::BeamNorm::RunData* rundata) {
+		if(!rundata) return;
+		rundata->nrecoil  = UDouble_t(0,0);
+		for(int i=0; i< NSB; ++i) {
+			rundata->yield[i] = UDouble_t(0,0);
+			rundata->nbeam[i] = UDouble_t(0,0);
+		}
 	}
-}
-const UDouble_t& get_livetime(const std::string& treename, const dragon::BeamNorm::RunData* rundata) {
-	if(!rundata) { }
-	else if(treename == "t1") return rundata->live_time_head;
-	else if(treename == "t3") return rundata->live_time_tail;
-	else if(treename == "t5") return rundata->live_time_coinc;
-	throw rundata;
-} }
+	const UDouble_t& get_livetime(const std::string& treename, const dragon::BeamNorm::RunData* rundata) {
+		if(!rundata) { }
+		else if(treename == "t1") return rundata->live_time_head;
+		else if(treename == "t3") return rundata->live_time_tail;
+		else if(treename == "t5") return rundata->live_time_coinc;
+		throw rundata;
+	} }
 
 
 void dragon::BeamNorm::CalculateRecoils(TFile* datafile, const char* treename, const char* gate)
@@ -1301,13 +1301,13 @@ void dragon::BeamNorm::CalculateRecoils(TFile* datafile, const char* treename, c
 }
 
 Long64_t dragon::BeamNorm::Draw(const char* varexp, const char* selection, Option_t* option,
-																Long64_t nentries, Long64_t firstentry)
+								Long64_t nentries, Long64_t firstentry)
 {
 	//
 	// Fill tree w/ latest data (circular)
 	fRunDataTree.SetCircular(fRunData.size());
 	for(std::map<Int_t, RunData>::iterator it = fRunData.begin();
-			it != fRunData.end(); ++it) {
+		it != fRunData.end(); ++it) {
 		fRunDataBranchAddr = &(it->second);
 		fRunDataTree.Fill();
 	}
@@ -1317,9 +1317,9 @@ Long64_t dragon::BeamNorm::Draw(const char* varexp, const char* selection, Optio
 }
 
 void dragon::BeamNorm::BatchCalculate(TChain* chain, Int_t chargeBeam, Double_t pkLow0, Double_t pkHigh0,
-																			Double_t pkLow1, Double_t pkHigh1,
-																			const char* recoilGate,
-																			Double_t time, Double_t skipBegin, Double_t skipEnd)
+									  Double_t pkLow1, Double_t pkHigh1,
+									  const char* recoilGate,
+									  Double_t time, Double_t skipBegin, Double_t skipEnd)
 {
 	TObjArray* flist = chain->GetListOfFiles();
 	for(Int_t i=0; i< flist->GetEntries(); ++i) {
@@ -1427,12 +1427,12 @@ UDouble_t dragon::BeamNorm::CalculateYield(Int_t whichSb, Int_t type, Bool_t pri
 
 	if(print) {
 		std::cout << "Beam:            \t" << beam   << "\n"
-							<< "Recoil:          \t" << recoil << "\n"
-							<< "Recoil (counted):\t" << recoilCounted << "\n"
-							<< "Recoil (trans corr):\t" << recoilTrans << "\n"
-							<< "Avg. Livetime (nrecoil weighted):\t" << liveAvg << "\n"
-							<< "Efficiency:      \t" << eff    << "\n"
-							<< "Yield:           \t" << out    << "\n";
+				  << "Recoil:          \t" << recoil << "\n"
+				  << "Recoil (counted):\t" << recoilCounted << "\n"
+				  << "Recoil (trans corr):\t" << recoilTrans << "\n"
+				  << "Avg. Livetime (nrecoil weighted):\t" << liveAvg << "\n"
+				  << "Efficiency:      \t" << eff    << "\n"
+				  << "Yield:           \t" << out    << "\n";
 	}
 
 	return out;
@@ -1467,28 +1467,28 @@ void dragon::LiveTimeCalculator::Reset()
 }
 
 namespace {
-inline int get_which_indx(const char* which) {
-	int indx = -1;
-	TString which1 = which;
-	which1.ToLower();
-	if     (!which1.CompareTo("head"))  indx = 0;
-	else if(!which1.CompareTo("tail"))  indx = 1;
-	else if(!which1.CompareTo("coinc")) indx = 2;
-	return indx;
-}
-
-inline Double_t get_from_array(const Double_t* arr, const char* which, const char* func) {
-	int indx = get_which_indx(which);
-
-	if(indx < 0) {
-		dutils::Error(func, __FILE__, __LINE__)
-			<< "Invalid specification \"" << which
-			<< "\", please specify \"head\" or \"tail\"";
-		return 0;
+	inline int get_which_indx(const char* which) {
+		int indx = -1;
+		TString which1 = which;
+		which1.ToLower();
+		if     (!which1.CompareTo("head"))  indx = 0;
+		else if(!which1.CompareTo("tail"))  indx = 1;
+		else if(!which1.CompareTo("coinc")) indx = 2;
+		return indx;
 	}
 
-	return *(arr+indx);
-} }
+	inline Double_t get_from_array(const Double_t* arr, const char* which, const char* func) {
+		int indx = get_which_indx(which);
+
+		if(indx < 0) {
+			dutils::Error(func, __FILE__, __LINE__)
+				<< "Invalid specification \"" << which
+				<< "\", please specify \"head\" or \"tail\"";
+			return 0;
+		}
+
+		return *(arr+indx);
+	} }
 
 Double_t dragon::LiveTimeCalculator::GetBusytime(const char* which) const
 {
@@ -1555,7 +1555,7 @@ Bool_t dragon::LiveTimeCalculator::CheckFile(TTree*& t1, TTree*& t3, midas::Data
 }
 
 Double_t dragon::LiveTimeCalculator::CalculateRuntime(midas::Database* db, const char* which,
-																											Double_t& start, Double_t& stop)
+													  Double_t& start, Double_t& stop)
 {
 	///
 	/// \param [in] db Pointer to the "odbstop" database for the current run
@@ -1615,31 +1615,31 @@ Double_t dragon::LiveTimeCalculator::CalculateRuntime(midas::Database* db, const
 }
 
 namespace {
-// fix for an early frontend bug where the tsc4 36-bit rollover counter
-// started from 1 instead of 0
-inline Double_t correct_rollover_fe_bug(TBranch* trigBranch, Double_t& trig_time)
-{
-	Double_t rollCorrect = 0;
-	const ULong_t roll36 = (ULong64_t)1<<36;
-	trigBranch->GetEntry(0);
+	// fix for an early frontend bug where the tsc4 36-bit rollover counter
+	// started from 1 instead of 0
+	inline Double_t correct_rollover_fe_bug(TBranch* trigBranch, Double_t& trig_time)
+	{
+		Double_t rollCorrect = 0;
+		const ULong_t roll36 = (ULong64_t)1<<36;
+		trigBranch->GetEntry(0);
 
-	if(trig_time >= roll36/20.) { // the bug was present
-		rollCorrect = roll36/20.; // microseconds
+		if(trig_time >= roll36/20.) { // the bug was present
+			rollCorrect = roll36/20.; // microseconds
 
-		// This should only be present in files analyzed on jabberwock, and part of the
-		// DAQ test, so warn otherwise
-		TString hostname = "$HOSTNAME1";
-		gSystem->ExpandPathName(hostname);
-		if(hostname.CompareTo("jabberwock.triumf.ca")) {
-			TString fname = trigBranch->GetTree()->GetDirectory()->GetName();
-			if(!fname.Contains("DAQ_test"))
-				dutils::Warning("DoCalculate", __FILE__, __LINE__)
-					<< "rollCorrect != 0 and host is not jabberwock!";
+			// This should only be present in files analyzed on jabberwock, and part of the
+			// DAQ test, so warn otherwise
+			TString hostname = "$HOSTNAME1";
+			gSystem->ExpandPathName(hostname);
+			if(hostname.CompareTo("jabberwock.triumf.ca")) {
+				TString fname = trigBranch->GetTree()->GetDirectory()->GetName();
+				if(!fname.Contains("DAQ_test"))
+					dutils::Warning("DoCalculate", __FILE__, __LINE__)
+						<< "rollCorrect != 0 and host is not jabberwock!";
+			}
 		}
-	}
 
-	return rollCorrect;
-} }
+		return rollCorrect;
+	} }
 
 void dragon::LiveTimeCalculator::DoCalculate(Double_t tbegin, Double_t tend)
 {
@@ -1797,34 +1797,34 @@ void dragon::LiveTimeCalculator::CalculateChain(TChain* chain)
 
 // ====== Helper class ====== //
 namespace {
-struct AccumulateBusy {
-	struct Output_t {
-		Double_t fEnd;
-		Double_t fTotalBusy;
+	struct AccumulateBusy {
+		struct Output_t {
+			Double_t fEnd;
+			Double_t fTotalBusy;
+		};
+
+		Output_t operator() (const Output_t& current, const dragon::CoincBusytime::Event& additional);
 	};
 
-	Output_t operator() (const Output_t& current, const dragon::CoincBusytime::Event& additional);
-};
+	inline AccumulateBusy::Output_t AccumulateBusy::operator()
+		(const Output_t& current, const dragon::CoincBusytime::Event& additional)
+	{
+		Output_t out = current;
 
-inline AccumulateBusy::Output_t AccumulateBusy::operator()
-	(const Output_t& current, const dragon::CoincBusytime::Event& additional)
-{
-	Output_t out = current;
+		if( current.fEnd < additional.fTrigger ) { // no overlap
+			out.fTotalBusy += additional.fBusy;
+			out.fEnd = additional.End();
+		}
+		else if( current.fEnd < additional.End() ) { // incomplete overlap
+			out.fTotalBusy += (additional.End() - current.fEnd);
+			out.fEnd = additional.End();
+		}
+		else { // complete overlap
+			;
+		}
 
-	if( current.fEnd < additional.fTrigger ) { // no overlap
-		out.fTotalBusy += additional.fBusy;
-		out.fEnd = additional.End();
-	}
-	else if( current.fEnd < additional.End() ) { // incomplete overlap
-		out.fTotalBusy += (additional.End() - current.fEnd);
-		out.fEnd = additional.End();
-	}
-	else { // complete overlap
-		;
-	}
-
-	return out;
-} }
+		return out;
+	} }
 
 dragon::CoincBusytime::CoincBusytime(size_t reserve):
 	fIsSorted(false)
@@ -1942,7 +1942,7 @@ UDouble_t dragon::StoppingPowerCalculator::TorrCgs(UDouble_t torr)
 }
 
 Double_t dragon::StoppingPowerCalculator::CalculateDensity(Double_t pressure, Double_t length,
-																													 Int_t nmol, Double_t temp)
+														   Int_t nmol, Double_t temp)
 {
 	///
 	/// \param pressure Gas pressure in torr
@@ -1955,7 +1955,7 @@ Double_t dragon::StoppingPowerCalculator::CalculateDensity(Double_t pressure, Do
 }
 
 UDouble_t dragon::StoppingPowerCalculator::CalculateDensity(UDouble_t pressure, UDouble_t length,
-																														Int_t nmol, Double_t temp)
+															Int_t nmol, Double_t temp)
 {
 	///
 	/// \param pressure Gas pressure in torr (with uncertainty)
@@ -1968,10 +1968,10 @@ UDouble_t dragon::StoppingPowerCalculator::CalculateDensity(UDouble_t pressure, 
 }
 
 UDouble_t dragon::StoppingPowerCalculator::CalculateEnergy(Double_t md1, Double_t md1Err, Int_t q, Double_t m,
-																													 Double_t cmag, Double_t cmagErr)
+														   Double_t cmag, Double_t cmagErr)
 {
 	///
-	/// Equation used is from Dave H's NIM paper on BGO z-position (includes relativity):
+	/// Equation used is from Dave H's NIM paper on BGO z-position (relativistic):
 	/// `E/m = cmag * (qB/m)^2 - [1/(2*u*c^2)] * (E/m)^2`
 	///
 	/// \param md1 MD1 field in Gauss
@@ -1993,9 +1993,9 @@ UDouble_t dragon::StoppingPowerCalculator::CalculateEnergy(Double_t md1, Double_
 }
 
 dragon::StoppingPowerCalculator::StoppingPowerCalculator(Int_t beamCharge, Double_t beamMass, Int_t nmol,
-																												 Double_t targetLen, Double_t targetLenErr,
-																												 Double_t cmd1, Double_t cmd1Err,
-																												 Double_t temp):
+														 Double_t targetLen, Double_t targetLenErr,
+														 Double_t cmd1, Double_t cmd1Err,
+														 Double_t temp):
 	fBeamMass(beamMass),
 	fBeamCharge(beamCharge),
 	fNmol(nmol),
@@ -2015,8 +2015,8 @@ dragon::StoppingPowerCalculator::StoppingPowerCalculator(Int_t beamCharge, Doubl
 	;
 }
 
-void dragon::StoppingPowerCalculator::AddMeasurement(Double_t pressure, Double_t pressureErr,
-																										 Double_t md1, Double_t md1Err)
+void dragon::StoppingPowerCalculator::AddMeasurement(Double_t pressure, Double_t md1,
+													 Double_t pressureErr, Double_t md1Err)
 {
 	/// \param pressure Measured pressure in torr
 	/// \param pressureErr Error (absolute) on the pressure measurement
@@ -2025,7 +2025,7 @@ void dragon::StoppingPowerCalculator::AddMeasurement(Double_t pressure, Double_t
 
 	UDouble_t upressure (pressure, pressureErr);
 	UDouble_t energy = CalculateEnergy(md1, md1Err, fBeamCharge, fBeamMass,
-																		 fMd1Constant.GetNominal(), fMd1Constant.GetErrLow());
+									   fMd1Constant.GetNominal(), fMd1Constant.GetErrLow());
 
 	UDouble_t density = CalculateDensity(upressure, fTargetLength, fNmol, fTemp);
 
@@ -2077,7 +2077,7 @@ TGraph* dragon::StoppingPowerCalculator::PlotMeasurements(XAxisType_t xaxis, YAx
 	/// \param xaxis Specify the x axis. Valid options are dragon::StoppingPowerCalculator::kPRESSURE (== 0)
 	///  to plot pressure (torr), or dragon::StoppingPowerCalculator::kDENSITY (== 1) to plot
 	///  density in atoms/cm^2.
-	/// \param xaxis Specify the y axis. Valid options are dragon::StoppingPowerCalculator::kMD1 (== 0)
+	/// \param yaxis Specify the y axis. Valid options are dragon::StoppingPowerCalculator::kMD1 (== 0)
 	///  to plot MD1 field (gauss) or dragon::StoppingPowerCalculator::kENERGY (== 1) to plot energy
 	///  in keV/u.
 	/// \param draw Argument `true` plots the graph with option `"AP"` in addition to
@@ -2094,8 +2094,26 @@ TGraph* dragon::StoppingPowerCalculator::PlotMeasurements(XAxisType_t xaxis, YAx
 		out = PlotUncertainties(fEnergies.size(), x, y);
 	}
 	if(out) {
-		out->SetMarkerStyle(21);
+		out->SetMarkerStyle(20);
+		out->GetXaxis()->CenterTitle();
+		out->GetYaxis()->CenterTitle();
+		out->SetTitle("");
 		if(draw) out->Draw("AP");
+
+		if(xaxis == kPRESSURE){
+			out->GetXaxis()->SetTitle("Pressure [Torr]");
+		}
+		else{
+			out->GetXaxis()->SetTitle("Density [g/cm^{3}]");
+		}
+
+		if(yaxis == kMD1){
+			out->GetYaxis()->SetTitle("NMR1 [Gauss]");
+		}
+		else{
+			out->GetYaxis()->SetTitle("Energy [MeV]");
+		}
+
 	}
 	return out;
 }
@@ -2118,7 +2136,7 @@ UDouble_t dragon::StoppingPowerCalculator::CalculateEbeam(TGraph** plot)
 	for(Int_t i=0; i< GetNmeasurements(); ++i) {
 
 		double md1err = fMd1[i].GetErrLow() < fMd1[i].GetErrHigh() ?
-																					fMd1[i].GetErrHigh() : fMd1[i].GetErrLow();
+											  fMd1[i].GetErrHigh() : fMd1[i].GetErrLow();
 
 		pres[i] = fPressures[i];
 		energy[i] = CalculateEnergy(fMd1[i].GetNominal(), md1err, fBeamCharge, fBeamMass, fMd1Constant.GetNominal(), 0);
@@ -2174,7 +2192,7 @@ UDouble_t dragon::StoppingPowerCalculator::CalculateEpsilon(TGraph** plot, UDoub
 	for(Int_t i=0; i< GetNmeasurements(); ++i) {
 
 		double md1err = fMd1[i].GetErrLow() < fMd1[i].GetErrHigh() ?
-																					fMd1[i].GetErrHigh() : fMd1[i].GetErrLow();
+											  fMd1[i].GetErrHigh() : fMd1[i].GetErrLow();
 
 		dens[i] = CalculateDensity(fPressures[i], UDouble_t(fTargetLength.GetNominal(), 0), fNmol, fTemp);
 		energy[i] = CalculateEnergy(fMd1[i].GetNominal(), md1err, fBeamCharge, fBeamMass, fMd1Constant.GetNominal(), 0);
@@ -2207,11 +2225,11 @@ UDouble_t dragon::StoppingPowerCalculator::CalculateEpsilon(TGraph** plot, UDoub
 		char buf[256];
 		if(out.GetErrHigh() != out.GetErrLow()) {
 			sprintf(buf, "Stopping power: %g ^{+%g}_{-%g} eV cm^{2} / atom;Density [atoms/cm^{2}];Beam energy [keV/u]",
-							out.GetNominal(), out.GetErrLow(), out.GetErrHigh());
+					out.GetNominal(), out.GetErrLow(), out.GetErrHigh());
 		}
 		else {
 			sprintf(buf, "Stopping power: %g +/-%g eV cm^{2} / atom;Density [atoms/cm^{2}];Beam energy [keV/u]",
-							out.GetNominal(), out.GetErrLow());
+					out.GetNominal(), out.GetErrLow());
 		}
 		(*plot)->SetTitle(buf);
 		(*plot)->Draw("AP");
@@ -2231,7 +2249,7 @@ UDouble_t dragon::StoppingPowerCalculator::CalculateEpsilon(TGraph** plot, UDoub
 
 
 dragon::ResonanceStrengthCalculator::ResonanceStrengthCalculator(Double_t eres, Double_t mbeam, Double_t mtarget,
-																																 dragon::BeamNorm* beamNorm, UDouble_t epsilon):
+																 dragon::BeamNorm* beamNorm, UDouble_t epsilon):
 	fBeamNorm(beamNorm), fEpsilon(epsilon), fBeamMass(mbeam), fTargetMass(mtarget), fResonanceEnergy(eres)
 {
 	///
@@ -2305,8 +2323,8 @@ UDouble_t dragon::ResonanceStrengthCalculator::CalculateWavelength(UDouble_t ere
 }
 
 UDouble_t dragon::ResonanceStrengthCalculator::CalculateResonanceStrength(UDouble_t yield, UDouble_t epsilon,
-																																					UDouble_t wavelength,
-																																					Double_t mbeam, Double_t mtarget)
+																		  UDouble_t wavelength,
+																		  Double_t mbeam, Double_t mtarget)
 {
 	UDouble_t wg = 2.*epsilon*yield / (wavelength*wavelength);
 	wg *= (mtarget / (mbeam+mtarget));
@@ -2508,15 +2526,15 @@ UDouble_t dragon::CrossSectionCalculator::CalculateCrossSection(UDouble_t yield,
 }
 
 namespace {
-inline std::vector<Double_t> get_runs(dragon::BeamNorm* fBeamNorm)
-{
-	std::vector<Double_t> runs;
-	std::vector<Int_t>::iterator irun = fBeamNorm->GetRuns().begin();
-	while(irun != fBeamNorm->GetRuns().end()) {
-		runs.push_back(*irun++);
-	}
-	return runs;
-} }
+	inline std::vector<Double_t> get_runs(dragon::BeamNorm* fBeamNorm)
+	{
+		std::vector<Double_t> runs;
+		std::vector<Int_t>::iterator irun = fBeamNorm->GetRuns().begin();
+		while(irun != fBeamNorm->GetRuns().end()) {
+			runs.push_back(*irun++);
+		}
+		return runs;
+	} }
 
 TGraph* dragon::CrossSectionCalculator::Plot(Marker_t marker, Color_t color)
 {
