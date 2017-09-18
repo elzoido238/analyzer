@@ -2071,7 +2071,7 @@ void dragon::StoppingPowerCalculator::RemoveMeasurement(Int_t index)
 	}
 }
 
-TGraph* dragon::StoppingPowerCalculator::PlotMeasurements(XAxisType_t xaxis, YAxisType_t yaxis, Bool_t draw) const
+TGraph* dragon::StoppingPowerCalculator::PlotMeasurements(XAxisType_t xaxis, YAxisType_t yaxis, Bool_t draw, Bool_t fit) const
 {
 	///
 	/// \param xaxis Specify the x axis. Valid options are dragon::StoppingPowerCalculator::kPRESSURE (== 0)
@@ -2098,7 +2098,6 @@ TGraph* dragon::StoppingPowerCalculator::PlotMeasurements(XAxisType_t xaxis, YAx
 		out->GetXaxis()->CenterTitle();
 		out->GetYaxis()->CenterTitle();
 		out->SetTitle("");
-		if(draw) out->Draw("AP");
 
 		if(xaxis == kPRESSURE){
 			out->GetXaxis()->SetTitle("Pressure [Torr]");
@@ -2113,6 +2112,9 @@ TGraph* dragon::StoppingPowerCalculator::PlotMeasurements(XAxisType_t xaxis, YAx
 		else{
 			out->GetYaxis()->SetTitle("Energy [MeV]");
 		}
+
+		if(draw) out->Draw("AP");
+		if(fit)  out->Fit("pol1");
 
 	}
 	return out;

@@ -484,7 +484,7 @@ namespace dragon {
 		/// Set MD1 constant
 		void SetMd1Constant(Double_t cmd1, Double_t cmd1Err) { fMd1Constant = UDouble_t (cmd1, cmd1Err); } // keV/u * Gauss^2
 		/// Add a pressure, energy measurement
-		void AddMeasurement(Double_t pressure, Double_t md1, Double_t pressureErr = 0.01, Double_t md1Err = 0.1);
+		void AddMeasurement(Double_t pressure, Double_t md1, Double_t pressureErr = 0.01, Double_t md1Err = 0.5);
 		/// Get a pressure, energy measurement
 		Measurement_t GetMeasurement(Int_t index) const;
 		/// Get the number of measurements
@@ -492,7 +492,7 @@ namespace dragon {
 		/// Remove a pressure, energy measurement
 		void RemoveMeasurement(Int_t index);
 		/// Plot energy vs. pressure or density
-		TGraph* PlotMeasurements(XAxisType_t xaxis = kPRESSURE, YAxisType_t yaxis = kENERGY, Bool_t draw = kTRUE) const;
+		TGraph* PlotMeasurements(XAxisType_t xaxis = kPRESSURE, YAxisType_t yaxis = kENERGY, Bool_t draw = kTRUE, Bool_t fit = kTRUE) const;
 		/// Calculate the `epsilon` parameter - slope of eloss vs. (atoms/cm^2)
 		UDouble_t CalculateEpsilon(TGraph** plot = 0, UDouble_t* ebeam = 0);
 		/// Calculate the beam energy (intercept of E vs. P)

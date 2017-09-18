@@ -498,7 +498,7 @@ public: // Data
 	/// Array of leading edge hits (calibrated)
 	double leading[MAX_HITS];
 	/// Array of trailing edge hits (calibrated)
-	double trailing[MAX_HITS];	
+	double trailing[MAX_HITS];
 
 public: // Subclass instances
 	Variables variables;
@@ -845,8 +845,8 @@ public: // Subclasses
 		std::string odb_path;
 
  public: // Methods
-    /// Constuctor
-    Variables();
+	/// Constuctor
+	Variables();
 		/// Resets names to default values
 		void reset();
 		///  Set data values from an database (file or online)
@@ -902,8 +902,8 @@ public: // Subclasses
 		midas::Bank_t bkname;
 
  public: // Methods
-    /// Constuctor
-    Variables();
+	/// Constuctor
+	Variables();
 		/// Resets names to default values
 		void reset();
 		///  Set data values from an database (file or online)
@@ -971,7 +971,7 @@ template <class T, class H>
 inline int64_t dragon::Scaler::plot(T* tree, const char* varexp, const char* selection, Option_t* option)
 {
 	///
-	/// This function creates a "traditional" DRAGON scaler histograms, where the x-axis is 
+	/// This function creates a "traditional" DRAGON scaler histograms, where the x-axis is
 	/// time and the bin counts is the number of scaler counts. If one of the `count[]` variables
 	/// is plotted, then the integral of the histogram will be the integral of scaler counts across the
 	/// whole run
